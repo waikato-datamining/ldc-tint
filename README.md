@@ -12,4 +12,6 @@ pip install git+https://github.com/waikato-datamining/ldc-tint.git
 
 ## Plugins
 
+Filters:
+
 * [de-macronize](plugins/de-macronize.md)
