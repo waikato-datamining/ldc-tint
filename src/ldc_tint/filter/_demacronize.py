@@ -12,10 +12,12 @@ from ldc.translation import TranslationData
 
 
 DEMACRONIZE_STRIP = "strip"
-DEMACRONIZE_DOUBLEUP = "double-up"
+DEMACRONIZE_DOUBLE = "double"
+DEMACRONIZE_TRIPLE = "triple"
 DEMCRONIZATION = [
     DEMACRONIZE_STRIP,
-    DEMACRONIZE_DOUBLEUP,
+    DEMACRONIZE_DOUBLE,
+    DEMACRONIZE_TRIPLE,
 ]
 
 
@@ -24,7 +26,7 @@ class Demacronize(Filter):
     Removes macrons from text.
     """
 
-    def __init__(self, demacronization: str = DEMACRONIZE_DOUBLEUP, location: str = LOCATION_ANY,
+    def __init__(self, demacronization: str = DEMACRONIZE_DOUBLE, location: str = LOCATION_ANY,
                  languages: List[str] = None, logger_name: str = None, logging_level: str = LOGGING_WARN):
         """
         Initializes the filter.
@@ -105,7 +107,7 @@ class Demacronize(Filter):
         :rtype: argparse.ArgumentParser
         """
         parser = super()._create_argparser()
-        parser.add_argument("-d", "--demacronization", choices=DEMCRONIZATION, default=DEMACRONIZE_DOUBLEUP, help="How to process the macrons")
+        parser.add_argument("-d", "--demacronization", choices=DEMCRONIZATION, default=DEMACRONIZE_DOUBLE, help="How to process the macrons")
         parser.add_argument("-L", "--location", choices=LOCATIONS, default=LOCATION_ANY, help="Where to look for the macons; pairs: " + ",".join(LOCATIONS_PAIRS) + ", pretrain: " + ",".join(LOCATIONS_PRETRAIN) + ", translation: " + ",".join(LOCATIONS_PRETRAIN))
         parser.add_argument("-g", "--language", type=str, help="The languages to inspect; inspects all if not specified", required=False, nargs="*")
         return parser
@@ -152,7 +154,7 @@ class Demacronize(Filter):
         s = s.replace("ū", "u")
         return s
 
-    def _double_up(self, s: str) -> str:
+    def _double(self, s: str) -> str:
         """
         Replaces the macrons with doubled-up vowels.
 
@@ -173,6 +175,27 @@ class Demacronize(Filter):
         s = s.replace("ū", "uu")
         return s
 
+    def _triple(self, s: str) -> str:
+        """
+        Replaces the macrons with tripled vowels.
+
+        :param s: the string to process
+        :type s: str
+        :return: the processed string
+        :rtype: str
+        """
+        s = s.replace("Ā", "Aaa")
+        s = s.replace("ā", "aaa")
+        s = s.replace("Ē", "Eee")
+        s = s.replace("ē", "eee")
+        s = s.replace("Ī", "Iii")
+        s = s.replace("ī", "iii")
+        s = s.replace("Ō", "Ooo")
+        s = s.replace("ō", "ooo")
+        s = s.replace("Ū", "Uuu")
+        s = s.replace("ū", "uuu")
+        return s
+
     def _process_macrons(self, s: str) -> str:
         """
         Processes the macrons.
@@ -184,8 +207,10 @@ class Demacronize(Filter):
         """
         if self.demacronization == DEMACRONIZE_STRIP:
             return self._strip(s)
-        elif self.demacronization == DEMACRONIZE_DOUBLEUP:
-            return self._double_up(s)
+        elif self.demacronization == DEMACRONIZE_DOUBLE:
+            return self._double(s)
+        elif self.demacronization == DEMACRONIZE_TRIPLE:
+            return self._triple(s)
         else:
             raise Exception("Unhandled demacronization: %s" % self.demacronization)
 
