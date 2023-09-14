@@ -8,7 +8,7 @@ Removes macrons from text, e.g., Ā -> Aa and ā -> aa
 
 ```
 usage: de-macronize [-h] [-l {DEBUG,INFO,WARN,ERROR,CRITICAL}]
-                    [-N LOGGER_NAME]
+                    [-N LOGGER_NAME] [-d {strip,double-up}]
                     [-L {any,instruction,input,output,content}]
                     [-g [LANGUAGE [LANGUAGE ...]]]
 
@@ -21,6 +21,8 @@ optional arguments:
   -N LOGGER_NAME, --logger_name LOGGER_NAME
                         The custom name to use for the logger, uses the plugin
                         name by default (default: None)
+  -d {strip,double-up}, --demacronization {strip,double-up}
+                        How to process the macrons (default: double-up)
   -L {any,instruction,input,output,content}, --location {any,instruction,input,output,content}
                         Where to look for the macons; pairs:
                         any,instruction,input,output, pretrain: any,content,

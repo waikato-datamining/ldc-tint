@@ -11,16 +11,26 @@ from ldc.supervised.pairs import PairData
 from ldc.translation import TranslationData
 
 
+DEMACRONIZE_STRIP = "strip"
+DEMACRONIZE_DOUBLEUP = "double-up"
+DEMCRONIZATION = [
+    DEMACRONIZE_STRIP,
+    DEMACRONIZE_DOUBLEUP,
+]
+
+
 class Demacronize(Filter):
     """
     Removes macrons from text.
     """
 
-    def __init__(self, location: str = LOCATION_ANY, languages: List[str] = None,
-                 logger_name: str = None, logging_level: str = LOGGING_WARN):
+    def __init__(self, demacronization: str = DEMACRONIZE_DOUBLEUP, location: str = LOCATION_ANY,
+                 languages: List[str] = None, logger_name: str = None, logging_level: str = LOGGING_WARN):
         """
         Initializes the filter.
 
+        :param demacronization: how to process the macrons
+        :type demacronization: str
         :param location: in which part of the data to look for the macrons
         :type location: str
         :param languages: the languages to restrict the check to, None to check all
@@ -32,9 +42,13 @@ class Demacronize(Filter):
         """
         super().__init__(logger_name=logger_name, logging_level=logging_level)
 
+        if demacronization not in DEMCRONIZATION:
+            raise Exception("Invalid demacronization: %s" % demacronization)
+
         if location not in LOCATIONS:
             raise Exception("Invalid location: %s" % location)
 
+        self.demacronization = demacronization
         self.location = location
         self.languages = languages
 
@@ -91,6 +105,7 @@ class Demacronize(Filter):
         :rtype: argparse.ArgumentParser
         """
         parser = super()._create_argparser()
+        parser.add_argument("-d", "--demacronization", choices=DEMCRONIZATION, default=DEMACRONIZE_DOUBLEUP, help="How to process the macrons")
         parser.add_argument("-L", "--location", choices=LOCATIONS, default=LOCATION_ANY, help="Where to look for the macons; pairs: " + ",".join(LOCATIONS_PAIRS) + ", pretrain: " + ",".join(LOCATIONS_PRETRAIN) + ", translation: " + ",".join(LOCATIONS_PRETRAIN))
         parser.add_argument("-g", "--language", type=str, help="The languages to inspect; inspects all if not specified", required=False, nargs="*")
         return parser
@@ -103,6 +118,7 @@ class Demacronize(Filter):
         :type ns: argparse.Namespace
         """
         super()._apply_args(ns)
+        self.demacronization = ns.demacronization
         self.location = ns.location
         self.languages = ns.language
 
@@ -115,44 +131,30 @@ class Demacronize(Filter):
         if self.languages is not None:
             self.languages = [x.lower() for x in self.languages]
 
-    def _get_lengths(self, data) -> List[int]:
+    def _strip(self, s: str) -> str:
         """
-        Turns the record into list of lengths.
+        Just removes the macrons.
 
-        :return: the compiled list of lengths
-        :rtype: list
+        :param s: the string to process
+        :type s: str
+        :return: the processed string
+        :rtype: str
         """
-        lengths = list()
+        s = s.replace("Ā", "A")
+        s = s.replace("ā", "a")
+        s = s.replace("Ē", "E")
+        s = s.replace("ē", "e")
+        s = s.replace("Ī", "I")
+        s = s.replace("ī", "i")
+        s = s.replace("Ō", "O")
+        s = s.replace("ō", "o")
+        s = s.replace("Ū", "U")
+        s = s.replace("ū", "u")
+        return s
 
-        if isinstance(data, PairData):
-            if self.location in [LOCATION_INSTRUCTION, LOCATION_ANY]:
-                lengths.append(len(data.instruction))
-            if self.location in [LOCATION_INPUT, LOCATION_ANY]:
-                lengths.append(len(data.input))
-            if self.location in [LOCATION_OUTPUT, LOCATION_ANY]:
-                lengths.append(len(data.output))
-        elif isinstance(data, PretrainData):
-            if self.location in [LOCATION_CONTENT, LOCATION_ANY]:
-                lengths.append(len(data.content))
-        elif isinstance(data, TranslationData):
-            if self.languages is None:
-                for k in data.translations:
-                    lengths.append(len(data.translations[k]))
-            else:
-                for lang in self.languages:
-                    if lang in data.translations:
-                        lengths.append(len(data.translations[lang]))
-                    else:
-                        # missing language gets length 0
-                        lengths.append(0)
-        else:
-            raise Exception("Unhandled data type: %s" % str(type(data)))
-
-        return lengths
-
-    def _remove(self, s: str) -> str:
+    def _double_up(self, s: str) -> str:
         """
-        Removes the macrons from the string.
+        Replaces the macrons with doubled-up vowels.
 
         :param s: the string to process
         :type s: str
@@ -171,6 +173,22 @@ class Demacronize(Filter):
         s = s.replace("ū", "uu")
         return s
 
+    def _process_macrons(self, s: str) -> str:
+        """
+        Processes the macrons.
+
+        :param s: the string to process
+        :type s: str
+        :return: the processed string
+        :rtype: str
+        """
+        if self.demacronization == DEMACRONIZE_STRIP:
+            return self._strip(s)
+        elif self.demacronization == DEMACRONIZE_DOUBLEUP:
+            return self._double_up(s)
+        else:
+            raise Exception("Unhandled demacronization: %s" % self.demacronization)
+
     def process(self, data):
         """
         Processes the data record.
@@ -182,22 +200,22 @@ class Demacronize(Filter):
 
         if isinstance(result, PairData):
             if self.location in [LOCATION_INSTRUCTION, LOCATION_ANY]:
-                result.instruction = self._remove(result.instruction)
+                result.instruction = self._process_macrons(result.instruction)
             if self.location in [LOCATION_INPUT, LOCATION_ANY]:
-                result.input = self._remove(result.input)
+                result.input = self._process_macrons(result.input)
             if self.location in [LOCATION_OUTPUT, LOCATION_ANY]:
-                result.output = self._remove(result.output)
+                result.output = self._process_macrons(result.output)
         elif isinstance(result, PretrainData):
             if self.location in [LOCATION_CONTENT, LOCATION_ANY]:
-                result.content = self._remove(result.content)
+                result.content = self._process_macrons(result.content)
         elif isinstance(result, TranslationData):
             if self.languages is None:
                 for k in result.translations:
-                    result.translations[k] = self._remove(result.translations[k])
+                    result.translations[k] = self._process_macrons(result.translations[k])
             else:
                 for lang in self.languages:
                     if lang in result.translations:
-                        result.translations[lang] = self._remove(result.translations[lang])
+                        result.translations[lang] = self._process_macrons(result.translations[lang])
         else:
             raise Exception("Unhandled data type: %s" % str(type(result)))
 
