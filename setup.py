@@ -38,7 +38,7 @@ setup(
     author_email='fracpete@waikato.ac.nz',
     entry_points={
         "ldc.filters": [
-            "de-macronize=ldc_tint.filter:Demacronize"
+            "ldc-tint-filters1=ldc_tint.filter:ldc.filter.Filter"
         ]
     },
 )
