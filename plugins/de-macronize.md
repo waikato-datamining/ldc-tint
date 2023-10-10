@@ -24,7 +24,7 @@ optional arguments:
   -d {strip,double,triple}, --demacronization {strip,double,triple}
                         How to process the macrons (default: double)
   -L {any,instruction,input,output,content}, --location {any,instruction,input,output,content}
-                        Where to look for the macons; pairs:
+                        Where to look for the macrons; pairs:
                         any,instruction,input,output, pretrain: any,content,
                         translation: any,content (default: any)
   -g [LANGUAGE [LANGUAGE ...]], --language [LANGUAGE [LANGUAGE ...]]
