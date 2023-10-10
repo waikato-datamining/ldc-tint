@@ -1,8 +1,8 @@
 # de-macronize
 
 * domain(s): pairs, pretrain, translation
-* accepts: PairData, PretrainData, TranslationData
-* generates: PairData, PretrainData, TranslationData
+* accepts: ldc.supervised.pairs.PairData, ldc.pretrain.PretrainData, ldc.translation.TranslationData
+* generates: ldc.supervised.pairs.PairData, ldc.pretrain.PretrainData, ldc.translation.TranslationData
 
 Removes macrons from text, e.g., Ā -> Aa and ā -> aa
 
