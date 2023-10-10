@@ -1,3 +1,3 @@
-The **ldc-tint** library in an extension to **llm-dataset-converter**
-with plugins specific for the Tikanga in Technology (TinT) project.
+The **ldc-tint** library is an extension to **llm-dataset-converter**
+with plugins specific to the Tikanga in Technology (TinT) project.
 
