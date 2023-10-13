@@ -15,3 +15,4 @@ pip install git+https://github.com/waikato-datamining/ldc-tint.git
 Filters:
 
 * [de-macronize](plugins/de-macronize.md)
+* [detect-maori](plugins/detect-maori.md)
