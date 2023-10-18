@@ -6,8 +6,8 @@ library specific to [Tikanga in Technology project (TinT)](https://www.waikato.a
 ## Installation
 
 ```bash
-pip install git+https://github.com/waikato-datamining/llm-dataset-converter.git
-pip install git+https://github.com/waikato-datamining/ldc-tint.git
+pip install git+https://github.com/waikato-llm/llm-dataset-converter.git
+pip install git+https://github.com/waikato-llm/ldc-tint.git
 ```
 
 ## Plugins
