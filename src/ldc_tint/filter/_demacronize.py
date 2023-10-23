@@ -214,7 +214,7 @@ class Demacronize(Filter):
         else:
             raise Exception("Unhandled demacronization: %s" % self.demacronization)
 
-    def process(self, data):
+    def _do_process(self, data):
         """
         Processes the data record.
 

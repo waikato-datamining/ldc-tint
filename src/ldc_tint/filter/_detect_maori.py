@@ -176,7 +176,7 @@ class DetectMaori(Filter):
             s = s.replace(c, '')
         return 1.0 - len(s) / full_len
 
-    def process(self, data):
+    def _do_process(self, data):
         """
         Processes the data record.
 
