@@ -16,3 +16,4 @@ Filters:
 
 * [de-macronize](plugins/de-macronize.md)
 * [detect-maori](plugins/detect-maori.md)
+* [is-maori](plugins/is-maori.md)
