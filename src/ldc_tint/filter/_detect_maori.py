@@ -2,7 +2,8 @@ import argparse
 import string
 from typing import List
 
-from ldc.core import LOGGING_WARN, DOMAIN_PRETRAIN
+from wai.logging import LOGGING_WARNING
+from ldc.core import DOMAIN_PRETRAIN
 from ldc.filter import Filter, FILTER_ACTIONS, FILTER_ACTION_KEEP, FILTER_ACTION_DISCARD
 from ldc.pretrain import PretrainData
 
@@ -50,7 +51,7 @@ class DetectMaori(Filter):
     """
 
     def __init__(self, max_non_maori: float = 1.0, min_maori: float = 0.0, action: str = FILTER_ACTION_KEEP,
-                 logger_name: str = None, logging_level: str = LOGGING_WARN):
+                 logger_name: str = None, logging_level: str = LOGGING_WARNING):
         """
         Initializes the filter.
 

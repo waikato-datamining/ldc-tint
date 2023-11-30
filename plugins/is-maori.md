@@ -4,10 +4,10 @@
 * accepts: ldc.pretrain.PretrainData
 * generates: ldc.pretrain.PretrainData
 
-Determines whether text is Māori or not (weak or strict mode), using the supplied thresholds. The filter action then determines what to do with the record.
+Determines whether text is Māori or not (weak or strict mode), using the supplied threshold. The filter action then determines what to do with the record.
 
 ```
-usage: is-maori [-h] [-l {DEBUG,INFO,WARN,ERROR,CRITICAL}] [-N LOGGER_NAME]
+usage: is-maori [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}] [-N LOGGER_NAME]
                 [-m MIN_MAORI] [-s] [-a {keep,discard}]
 
 Determines whether text is Māori or not (weak or strict mode), using the
@@ -16,8 +16,8 @@ record.
 
 optional arguments:
   -h, --help            show this help message and exit
-  -l {DEBUG,INFO,WARN,ERROR,CRITICAL}, --logging_level {DEBUG,INFO,WARN,ERROR,CRITICAL}
-                        The logging level to use (default: WARN)
+  -l {DEBUG,INFO,WARNING,ERROR,CRITICAL}, --logging_level {DEBUG,INFO,WARNING,ERROR,CRITICAL}
+                        The logging level to use. (default: WARN)
   -N LOGGER_NAME, --logger_name LOGGER_NAME
                         The custom name to use for the logger, uses the plugin
                         name by default (default: None)

@@ -2,7 +2,8 @@ import argparse
 import copy
 from typing import List
 
-from ldc.core import LOGGING_WARN, DOMAIN_PAIRS, DOMAIN_PRETRAIN, DOMAIN_TRANSLATION
+from wai.logging import LOGGING_WARNING
+from ldc.core import DOMAIN_PAIRS, DOMAIN_PRETRAIN, DOMAIN_TRANSLATION
 from ldc.core import LOCATION_ANY, LOCATION_INSTRUCTION, LOCATION_INPUT, LOCATION_OUTPUT, LOCATION_CONTENT, \
     LOCATIONS, LOCATIONS_PAIRS, LOCATIONS_PRETRAIN
 from ldc.filter import Filter
@@ -27,7 +28,7 @@ class Demacronize(Filter):
     """
 
     def __init__(self, demacronization: str = DEMACRONIZE_DOUBLE, location: str = LOCATION_ANY,
-                 languages: List[str] = None, logger_name: str = None, logging_level: str = LOGGING_WARN):
+                 languages: List[str] = None, logger_name: str = None, logging_level: str = LOGGING_WARNING):
         """
         Initializes the filter.
 

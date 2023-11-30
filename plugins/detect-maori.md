@@ -7,7 +7,7 @@
 Detects whether text is Māori or not, by calculating scores based on encountered characters after lower-casing the text and removing all white spaces/punctuation.
 
 ```
-usage: detect-maori [-h] [-l {DEBUG,INFO,WARN,ERROR,CRITICAL}]
+usage: detect-maori [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
                     [-N LOGGER_NAME] [-M MAX_NON_MAORI] [-m MIN_MAORI]
                     [-a {keep,discard}]
 
@@ -17,8 +17,8 @@ spaces/punctuation.
 
 optional arguments:
   -h, --help            show this help message and exit
-  -l {DEBUG,INFO,WARN,ERROR,CRITICAL}, --logging_level {DEBUG,INFO,WARN,ERROR,CRITICAL}
-                        The logging level to use (default: WARN)
+  -l {DEBUG,INFO,WARNING,ERROR,CRITICAL}, --logging_level {DEBUG,INFO,WARNING,ERROR,CRITICAL}
+                        The logging level to use. (default: WARN)
   -N LOGGER_NAME, --logger_name LOGGER_NAME
                         The custom name to use for the logger, uses the plugin
                         name by default (default: None)
