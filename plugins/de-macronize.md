@@ -9,7 +9,7 @@ Removes macrons from text, e.g., Ā -> Aa and ā -> aa
 ```
 usage: de-macronize [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
                     [-N LOGGER_NAME] [-d {strip,double,triple}]
-                    [-L {any,instruction,input,output,content}]
+                    [-L [{any,instruction,input,output,content} [{any,instruction,input,output,content} ...]]]
                     [-g [LANGUAGE [LANGUAGE ...]]]
 
 Removes macrons from text, e.g., Ā -> Aa and ā -> aa
@@ -23,7 +23,7 @@ optional arguments:
                         name by default (default: None)
   -d {strip,double,triple}, --demacronization {strip,double,triple}
                         How to process the macrons (default: double)
-  -L {any,instruction,input,output,content}, --location {any,instruction,input,output,content}
+  -L [{any,instruction,input,output,content} [{any,instruction,input,output,content} ...]], --location [{any,instruction,input,output,content} [{any,instruction,input,output,content} ...]]
                         Where to look for the macrons; pairs:
                         any,instruction,input,output, pretrain: any,content,
                         translation: any,content (default: any)

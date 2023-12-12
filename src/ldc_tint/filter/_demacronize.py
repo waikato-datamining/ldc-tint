@@ -1,11 +1,11 @@
 import argparse
 import copy
-from typing import List
+from typing import List, Union
 
 from wai.logging import LOGGING_WARNING
 from ldc.core import DOMAIN_PAIRS, DOMAIN_PRETRAIN, DOMAIN_TRANSLATION
 from ldc.core import LOCATION_ANY, LOCATION_INSTRUCTION, LOCATION_INPUT, LOCATION_OUTPUT, LOCATION_CONTENT, \
-    LOCATIONS, LOCATIONS_PAIRS, LOCATIONS_PRETRAIN
+    LOCATIONS, LOCATIONS_PAIRS, LOCATIONS_PRETRAIN, locations_match
 from ldc.filter import Filter
 from ldc.pretrain import PretrainData
 from ldc.supervised.pairs import PairData
@@ -27,7 +27,7 @@ class Demacronize(Filter):
     Removes macrons from text.
     """
 
-    def __init__(self, demacronization: str = DEMACRONIZE_DOUBLE, location: str = LOCATION_ANY,
+    def __init__(self, demacronization: str = DEMACRONIZE_DOUBLE, location: Union[str, List[str]] = LOCATION_ANY,
                  languages: List[str] = None, logger_name: str = None, logging_level: str = LOGGING_WARNING):
         """
         Initializes the filter.
@@ -35,7 +35,7 @@ class Demacronize(Filter):
         :param demacronization: how to process the macrons
         :type demacronization: str
         :param location: in which part of the data to look for the macrons
-        :type location: str
+        :type location: str or list
         :param languages: the languages to restrict the check to, None to check all
         :type languages: list
         :param logger_name: the name to use for the logger
@@ -109,7 +109,7 @@ class Demacronize(Filter):
         """
         parser = super()._create_argparser()
         parser.add_argument("-d", "--demacronization", choices=DEMCRONIZATION, default=DEMACRONIZE_DOUBLE, help="How to process the macrons")
-        parser.add_argument("-L", "--location", choices=LOCATIONS, default=LOCATION_ANY, help="Where to look for the macrons; pairs: " + ",".join(LOCATIONS_PAIRS) + ", pretrain: " + ",".join(LOCATIONS_PRETRAIN) + ", translation: " + ",".join(LOCATIONS_PRETRAIN))
+        parser.add_argument("-L", "--location", choices=LOCATIONS, nargs="*", default=LOCATION_ANY, help="Where to look for the macrons; pairs: " + ",".join(LOCATIONS_PAIRS) + ", pretrain: " + ",".join(LOCATIONS_PRETRAIN) + ", translation: " + ",".join(LOCATIONS_PRETRAIN))
         parser.add_argument("-g", "--language", type=str, help="The languages to inspect; inspects all if not specified", required=False, nargs="*")
         return parser
 
@@ -133,6 +133,8 @@ class Demacronize(Filter):
 
         if self.languages is not None:
             self.languages = [x.lower() for x in self.languages]
+        if isinstance(self.location, str):
+            self.location = [self.location]
 
     def _strip(self, s: str) -> str:
         """
@@ -225,14 +227,14 @@ class Demacronize(Filter):
         result = copy.deepcopy(data)
 
         if isinstance(result, PairData):
-            if self.location in [LOCATION_INSTRUCTION, LOCATION_ANY]:
+            if locations_match(self.location, LOCATION_INSTRUCTION):
                 result.instruction = self._process_macrons(result.instruction)
-            if self.location in [LOCATION_INPUT, LOCATION_ANY]:
+            if locations_match(self.location, LOCATION_INPUT):
                 result.input = self._process_macrons(result.input)
-            if self.location in [LOCATION_OUTPUT, LOCATION_ANY]:
+            if locations_match(self.location, LOCATION_OUTPUT):
                 result.output = self._process_macrons(result.output)
         elif isinstance(result, PretrainData):
-            if self.location in [LOCATION_CONTENT, LOCATION_ANY]:
+            if locations_match(self.location, LOCATION_CONTENT):
                 result.content = self._process_macrons(result.content)
         elif isinstance(result, TranslationData):
             if self.languages is None:
