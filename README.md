@@ -12,8 +12,4 @@ pip install git+https://github.com/waikato-llm/ldc-tint.git
 
 ## Plugins
 
-Filters:
-
-* [de-macronize](plugins/de-macronize.md)
-* [detect-maori](plugins/detect-maori.md)
-* [is-maori](plugins/is-maori.md)
+See [here](plugins/README.md) for an overview of all plugins.
