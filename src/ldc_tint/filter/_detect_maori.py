@@ -234,7 +234,7 @@ class DetectMaori(Filter):
                 ratios[LOCATION_CONTENT] = self._evaluate(data.content)
         elif isinstance(data, PairData):
             if locations_match(self.location, LOCATION_INSTRUCTION):
-                ratios[LOCATION_CONTENT] = self._evaluate(data.instruction)
+                ratios[LOCATION_INSTRUCTION] = self._evaluate(data.instruction)
             if locations_match(self.location, LOCATION_INPUT):
                 ratios[LOCATION_INPUT] = self._evaluate(data.input)
             if locations_match(self.location, LOCATION_OUTPUT):
