@@ -1,11 +1,14 @@
 import argparse
 import re
-from typing import List
+from typing import List, Union
 
 from wai.logging import LOGGING_WARNING
-from ldc.core import DOMAIN_PRETRAIN
+from ldc.core import DOMAIN_PRETRAIN, DOMAIN_PAIRS
+from ldc.core import LOCATION_ANY, LOCATION_INSTRUCTION, LOCATION_INPUT, LOCATION_OUTPUT, LOCATION_CONTENT, \
+    LOCATIONS, LOCATIONS_PAIRS, LOCATIONS_PRETRAIN, locations_match
 from ldc.filter import Filter, FILTER_ACTIONS, FILTER_ACTION_KEEP, FILTER_ACTION_DISCARD
 from ldc.pretrain import PretrainData
+from ldc.supervised.pairs import PairData
 from reo_toolkit import is_maori
 
 
@@ -15,6 +18,7 @@ class IsMaori(Filter):
     """
 
     def __init__(self, min_maori: float = 0.0, strict: bool = False, action: str = FILTER_ACTION_KEEP,
+                 location: Union[str, List[str]] = LOCATION_ANY,
                  logger_name: str = None, logging_level: str = LOGGING_WARNING):
         """
         Initializes the filter.
@@ -25,6 +29,8 @@ class IsMaori(Filter):
         :type strict: bool
         :param action: the action to apply to the data records
         :type action: str
+        :param location: which part of the data to check
+        :type location: str or list
         :param logger_name: the name to use for the logger
         :type logger_name: str
         :param logging_level: the logging level to use
@@ -37,6 +43,7 @@ class IsMaori(Filter):
 
         self.min_maori = min_maori
         self.strict = strict
+        self.location = location
         self.action = action
 
     def name(self) -> str:
@@ -64,7 +71,7 @@ class IsMaori(Filter):
         :return: the domains
         :rtype: list
         """
-        return [DOMAIN_PRETRAIN]
+        return [DOMAIN_PRETRAIN, DOMAIN_PAIRS]
 
     def accepts(self) -> List:
         """
@@ -73,7 +80,7 @@ class IsMaori(Filter):
         :return: the list of classes
         :rtype: list
         """
-        return [PretrainData]
+        return [PretrainData, PairData]
 
     def generates(self) -> List:
         """
@@ -82,7 +89,7 @@ class IsMaori(Filter):
         :return: the list of classes
         :rtype: list
         """
-        return [PretrainData]
+        return [PretrainData, PairData]
 
     def _create_argparser(self) -> argparse.ArgumentParser:
         """
@@ -94,6 +101,7 @@ class IsMaori(Filter):
         parser = super()._create_argparser()
         parser.add_argument("-m", "--min_maori", type=float, default=0.0, help="The minimum required ratio (0-1) of Māori words in the text.")
         parser.add_argument("-s", "--strict", action="store_true", help="Whether to use strict mode rather than weak one.")
+        parser.add_argument("-L", "--location", choices=LOCATIONS, nargs="*", default=LOCATION_ANY, help="Which data use for counting tokens; pairs: " + ",".join(LOCATIONS_PAIRS) + ", pretrain: " + ",".join(LOCATIONS_PRETRAIN) + ", translation: " + ",".join(LOCATIONS_PRETRAIN))
         parser.add_argument("-a", "--action", choices=FILTER_ACTIONS, default=FILTER_ACTION_KEEP, help="How to react when the thresholds are met")
         return parser
 
@@ -107,7 +115,44 @@ class IsMaori(Filter):
         super()._apply_args(ns)
         self.min_maori = ns.min_maori
         self.strict = ns.strict
+        self.location = ns.location
         self.action = ns.action
+
+    def initialize(self):
+        """
+        Initializes the processing, e.g., for opening files or databases.
+        """
+        super().initialize()
+
+        if isinstance(self.location, str):
+            self.location = [self.location]
+
+    def _evaluate(self, content: str) -> float:
+        """
+        Evaluates the text.
+
+        :param content: the text to evaluaqte
+        :type content: str
+        :return: the determined ratio of maori words
+        :rtype: float
+        """
+        # evaluate all words
+        text = content.strip()
+        splitter = re.compile(r'[\s\n\-]+')
+        if splitter.search(text):
+            evals = []
+            # Split the text and evaluate each piece
+            for split in splitter.split(text):
+                if len(split) > 0:
+                    evals.append(is_maori(split, strict=self.strict))
+        else:
+            evals = [is_maori(content, strict=self.strict)]
+
+        if len(evals) > 0:
+            ratio = evals.count(True) / len(evals)
+        else:
+            ratio = 0.0
+        return ratio
 
     def _do_process(self, data):
         """
@@ -118,30 +163,31 @@ class IsMaori(Filter):
         """
         result = data
 
-        # evaluate all words
-        text = data.content.strip()
-        splitter = re.compile(r'[\s\n\-]+')
-        if splitter.search(text):
-            evals = []
-            # Split the text and evaluate each piece
-            for split in splitter.split(text):
-                if len(split) > 0:
-                    evals.append(is_maori(split, strict=self.strict))
+        ratios = dict()
+        if isinstance(data, PretrainData):
+            if locations_match(self.location, LOCATION_CONTENT):
+                ratios[LOCATION_CONTENT] = self._evaluate(data.content)
+        elif isinstance(data, PairData):
+            if locations_match(self.location, LOCATION_INSTRUCTION):
+                ratios[LOCATION_CONTENT] = self._evaluate(data.instruction)
+            if locations_match(self.location, LOCATION_INPUT):
+                ratios[LOCATION_INPUT] = self._evaluate(data.input)
+            if locations_match(self.location, LOCATION_OUTPUT):
+                ratios[LOCATION_OUTPUT] = self._evaluate(data.output)
         else:
-            evals = [is_maori(data.content, strict=self.strict)]
+            raise Exception("Unhandled type of data: %s" % str(type(data)))
 
-        if len(evals) > 0:
-            ratio = evals.count(True) / len(evals)
-        else:
-            ratio = 0.0
+        for key in ratios:
+            ratio = ratios[key]
+            if ratio >= self.min_maori:
+                if self.action == FILTER_ACTION_DISCARD:
+                    result = None
+            else:
+                if self.action == FILTER_ACTION_KEEP:
+                    result = None
+            if result is None:
+                break
 
-        if ratio >= self.min_maori:
-            if self.action == FILTER_ACTION_DISCARD:
-                result = None
-        else:
-            if self.action == FILTER_ACTION_KEEP:
-                result = None
-
-        self.logger().info("ratio=%0.3f, forward=%s" % (ratio, (result is not None)))
+        self.logger().info("ratios=%s, forward=%s" % (str(ratios), (result is not None)))
 
         return result
