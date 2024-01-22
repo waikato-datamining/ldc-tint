@@ -1,14 +1,15 @@
 # detect-maori
 
-* domain(s): pretrain
-* accepts: ldc.pretrain.PretrainData
-* generates: ldc.pretrain.PretrainData
+* domain(s): pretrain, pairs
+* accepts: ldc.pretrain.PretrainData, ldc.supervised.pairs.PairData
+* generates: ldc.pretrain.PretrainData, ldc.supervised.pairs.PairData
 
 Detects whether text is Māori or not, by calculating scores based on encountered characters after lower-casing the text and removing all white spaces/punctuation.
 
 ```
 usage: detect-maori [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
                     [-N LOGGER_NAME] [-M MAX_NON_MAORI] [-m MIN_MAORI]
+                    [-L [{any,instruction,input,output,content} [{any,instruction,input,output,content} ...]]]
                     [-a {keep,discard}]
 
 Detects whether text is Māori or not, by calculating scores based on
@@ -28,6 +29,10 @@ optional arguments:
   -m MIN_MAORI, --min_maori MIN_MAORI
                         The minimum required ratio (0-1) of Māori characters
                         (ie long vowels) in the text. (default: 0.0)
+  -L [{any,instruction,input,output,content} [{any,instruction,input,output,content} ...]], --location [{any,instruction,input,output,content} [{any,instruction,input,output,content} ...]]
+                        Which data use for counting tokens; pairs:
+                        any,instruction,input,output, pretrain: any,content
+                        (default: any)
   -a {keep,discard}, --action {keep,discard}
                         How to react when the thresholds are met (default:
                         keep)

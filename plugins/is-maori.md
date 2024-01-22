@@ -1,14 +1,16 @@
 # is-maori
 
-* domain(s): pretrain
-* accepts: ldc.pretrain.PretrainData
-* generates: ldc.pretrain.PretrainData
+* domain(s): pretrain, pairs
+* accepts: ldc.pretrain.PretrainData, ldc.supervised.pairs.PairData
+* generates: ldc.pretrain.PretrainData, ldc.supervised.pairs.PairData
 
 Determines whether text is Māori or not (weak or strict mode), using the supplied threshold. The filter action then determines what to do with the record.
 
 ```
 usage: is-maori [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}] [-N LOGGER_NAME]
-                [-m MIN_MAORI] [-s] [-a {keep,discard}]
+                [-m MIN_MAORI] [-s]
+                [-L [{any,instruction,input,output,content} [{any,instruction,input,output,content} ...]]]
+                [-a {keep,discard}]
 
 Determines whether text is Māori or not (weak or strict mode), using the
 supplied threshold. The filter action then determines what to do with the
@@ -26,6 +28,10 @@ optional arguments:
                         text. (default: 0.0)
   -s, --strict          Whether to use strict mode rather than weak one.
                         (default: False)
+  -L [{any,instruction,input,output,content} [{any,instruction,input,output,content} ...]], --location [{any,instruction,input,output,content} [{any,instruction,input,output,content} ...]]
+                        Which data use for counting tokens; pairs:
+                        any,instruction,input,output, pretrain: any,content
+                        (default: any)
   -a {keep,discard}, --action {keep,discard}
                         How to react when the thresholds are met (default:
                         keep)
