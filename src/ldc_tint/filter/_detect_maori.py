@@ -1,11 +1,14 @@
 import argparse
 import string
-from typing import List
+from typing import List, Union, Tuple
 
 from wai.logging import LOGGING_WARNING
-from ldc.core import DOMAIN_PRETRAIN
+from ldc.core import DOMAIN_PRETRAIN, DOMAIN_PAIRS
+from ldc.core import LOCATION_ANY, LOCATION_INSTRUCTION, LOCATION_INPUT, LOCATION_OUTPUT, LOCATION_CONTENT, \
+    LOCATIONS, LOCATIONS_PAIRS, LOCATIONS_PRETRAIN, locations_match
 from ldc.filter import Filter, FILTER_ACTIONS, FILTER_ACTION_KEEP, FILTER_ACTION_DISCARD
 from ldc.pretrain import PretrainData
+from ldc.supervised.pairs import PairData
 
 
 # https://en.wikipedia.org/wiki/M%C4%81ori_language#Orthography
@@ -51,6 +54,7 @@ class DetectMaori(Filter):
     """
 
     def __init__(self, max_non_maori: float = 1.0, min_maori: float = 0.0, action: str = FILTER_ACTION_KEEP,
+                 location: Union[str, List[str]] = LOCATION_ANY,
                  logger_name: str = None, logging_level: str = LOGGING_WARNING):
         """
         Initializes the filter.
@@ -61,6 +65,8 @@ class DetectMaori(Filter):
         :type min_maori: float
         :param action: the action to apply to the data records
         :type action: str
+        :param location: which part of the data to check
+        :type location: str or list
         :param logger_name: the name to use for the logger
         :type logger_name: str
         :param logging_level: the logging level to use
@@ -73,6 +79,7 @@ class DetectMaori(Filter):
 
         self.max_non_maori = max_non_maori
         self.min_maori = min_maori
+        self.location = location
         self.action = action
 
     def name(self) -> str:
@@ -100,7 +107,7 @@ class DetectMaori(Filter):
         :return: the domains
         :rtype: list
         """
-        return [DOMAIN_PRETRAIN]
+        return [DOMAIN_PRETRAIN, DOMAIN_PAIRS]
 
     def accepts(self) -> List:
         """
@@ -109,7 +116,7 @@ class DetectMaori(Filter):
         :return: the list of classes
         :rtype: list
         """
-        return [PretrainData]
+        return [PretrainData, PairData]
 
     def generates(self) -> List:
         """
@@ -118,7 +125,7 @@ class DetectMaori(Filter):
         :return: the list of classes
         :rtype: list
         """
-        return [PretrainData]
+        return [PretrainData, PairData]
 
     def _create_argparser(self) -> argparse.ArgumentParser:
         """
@@ -130,6 +137,7 @@ class DetectMaori(Filter):
         parser = super()._create_argparser()
         parser.add_argument("-M", "--max_non_maori", type=float, default=1.0, help="The maximum allowed ratio (0-1) of non-Māori characters in the text.")
         parser.add_argument("-m", "--min_maori", type=float, default=0.0, help="The minimum required ratio (0-1) of Māori characters (ie long vowels) in the text.")
+        parser.add_argument("-L", "--location", choices=LOCATIONS, nargs="*", default=LOCATION_ANY, help="Which data use for counting tokens; pairs: " + ",".join(LOCATIONS_PAIRS) + ", pretrain: " + ",".join(LOCATIONS_PRETRAIN) + ", translation: " + ",".join(LOCATIONS_PRETRAIN))
         parser.add_argument("-a", "--action", choices=FILTER_ACTIONS, default=FILTER_ACTION_KEEP, help="How to react when the thresholds are met")
         return parser
 
@@ -143,7 +151,17 @@ class DetectMaori(Filter):
         super()._apply_args(ns)
         self.max_non_maori = ns.max_non_maori
         self.min_maori = ns.min_maori
+        self.location = ns.location
         self.action = ns.action
+
+    def initialize(self):
+        """
+        Initializes the processing, e.g., for opening files or databases.
+        """
+        super().initialize()
+
+        if isinstance(self.location, str):
+            self.location = [self.location]
 
     def _calc_non_maori_ratio(self, s: str) -> float:
         """
@@ -177,16 +195,15 @@ class DetectMaori(Filter):
             s = s.replace(c, '')
         return 1.0 - len(s) / full_len
 
-    def _do_process(self, data):
+    def _evaluate(self, text: str) -> Tuple[float, float]:
         """
-        Processes the data record.
+        Evaluates the text for Māori/non-Māori characters.
 
-        :param data: the record to process
-        :return: the potentially updated record or None if to drop
+        :param text: the text to evaluate
+        :type text: str
+        :return: tuple of Māori/non-Māori character ratios
+        :rtype: tuple
         """
-        result = data
-
-        text = data.content
         # lower case
         text = text.lower()
         # remove whitespaces and punctuation
@@ -197,22 +214,50 @@ class DetectMaori(Filter):
         # calc ratios
         non_maori = self._calc_non_maori_ratio(text)
         maori = self._calc_maori_ratio(text)
+        return maori, non_maori
 
-        # within thresholds?
-        within_thresholds = True
-        if non_maori > self.max_non_maori:
-            within_thresholds = False
-        if maori < self.min_maori:
-            within_thresholds = False
+    def _do_process(self, data):
+        """
+        Processes the data record.
 
-        if within_thresholds:
-            if self.action == FILTER_ACTION_DISCARD:
-                result = None
+        :param data: the record to process
+        :return: the potentially updated record or None if to drop
+        """
+        result = data
+
+        ratios = dict()
+        if isinstance(data, PretrainData):
+            if locations_match(self.location, LOCATION_CONTENT):
+                ratios[LOCATION_CONTENT] = self._evaluate(data.content)
+        elif isinstance(data, PairData):
+            if locations_match(self.location, LOCATION_INSTRUCTION):
+                ratios[LOCATION_CONTENT] = self._evaluate(data.instruction)
+            if locations_match(self.location, LOCATION_INPUT):
+                ratios[LOCATION_INPUT] = self._evaluate(data.input)
+            if locations_match(self.location, LOCATION_OUTPUT):
+                ratios[LOCATION_OUTPUT] = self._evaluate(data.output)
         else:
-            if self.action == FILTER_ACTION_KEEP:
-                result = None
+            raise Exception("Unhandled type of data: %s" % str(type(data)))
 
-        self.logger().info("non-Māori=%f, Māori=%f, within=%s, forward=%s"
-                           % (non_maori, maori, within_thresholds, (result is not None)))
+        within_thresholds = dict()
+        for key in ratios:
+            maori, non_maori = ratios[key]
+
+            # within thresholds?
+            within_thresholds[key] = True
+            if non_maori > self.max_non_maori:
+                within_thresholds[key] = False
+            if maori < self.min_maori:
+                within_thresholds[key] = False
+
+            if within_thresholds[key]:
+                if self.action == FILTER_ACTION_DISCARD:
+                    result = None
+            else:
+                if self.action == FILTER_ACTION_KEEP:
+                    result = None
+
+        self.logger().info("Māori/non-Māori ratios=%s, within=%s, forward=%s"
+                           % (ratios, within_thresholds, (result is not None)))
 
         return result
