@@ -5,7 +5,7 @@ from typing import List, Union
 from wai.logging import LOGGING_WARNING
 from ldc.core import DOMAIN_PAIRS, DOMAIN_PRETRAIN, DOMAIN_TRANSLATION
 from ldc.core import LOCATION_ANY, LOCATION_INSTRUCTION, LOCATION_INPUT, LOCATION_OUTPUT, LOCATION_CONTENT, \
-    LOCATIONS, LOCATIONS_PAIRS, LOCATIONS_PRETRAIN, locations_match
+    LOCATIONS, LOCATIONS_PAIRS, LOCATIONS_PRETRAIN, LOCATIONS_TRANSLATION, locations_match
 from ldc.filter import Filter
 from ldc.pretrain import PretrainData
 from ldc.supervised.pairs import PairData
@@ -109,7 +109,7 @@ class Demacronize(Filter):
         """
         parser = super()._create_argparser()
         parser.add_argument("-d", "--demacronization", choices=DEMCRONIZATION, default=DEMACRONIZE_DOUBLE, help="How to process the macrons")
-        parser.add_argument("-L", "--location", choices=LOCATIONS, nargs="*", default=LOCATION_ANY, help="Where to look for the macrons; pairs: " + ",".join(LOCATIONS_PAIRS) + ", pretrain: " + ",".join(LOCATIONS_PRETRAIN) + ", translation: " + ",".join(LOCATIONS_PRETRAIN))
+        parser.add_argument("-L", "--location", choices=LOCATIONS, nargs="*", default=LOCATION_ANY, help="Where to look for the macrons; pairs: " + ",".join(LOCATIONS_PAIRS) + ", pretrain: " + ",".join(LOCATIONS_PRETRAIN) + ", translation: " + ",".join(LOCATIONS_TRANSLATION))
         parser.add_argument("-g", "--language", type=str, help="The languages to inspect; inspects all if not specified", required=False, nargs="*")
         return parser
 
