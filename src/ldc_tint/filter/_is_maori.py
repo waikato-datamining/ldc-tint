@@ -131,11 +131,14 @@ class IsMaori(Filter):
         """
         Evaluates the text.
 
-        :param content: the text to evaluaqte
+        :param content: the text to evaluate
         :type content: str
         :return: the determined ratio of maori words
         :rtype: float
         """
+        if content is None:
+            return 0.0
+
         # evaluate all words
         text = content.strip()
         splitter = re.compile(r'[\s\n\-]+')

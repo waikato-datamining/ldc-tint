@@ -204,6 +204,9 @@ class DetectMaori(Filter):
         :return: tuple of Māori/non-Māori character ratios
         :rtype: tuple
         """
+        if text is None:
+            return 0.0, 0.0
+
         # lower case
         text = text.lower()
         # remove whitespaces and punctuation
