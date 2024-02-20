@@ -39,7 +39,7 @@ setup(
     author_email='fracpete@waikato.ac.nz',
     entry_points={
         "ldc.filters": [
-            "ldc-tint-filters1=ldc_tint.filter:ldc.filter.Filter"
+            "ldc-tint-filters1=ldc_tint.filter:ldc.api.Filter"
         ]
     },
 )

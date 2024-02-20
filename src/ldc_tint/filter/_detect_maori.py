@@ -6,7 +6,7 @@ from wai.logging import LOGGING_WARNING
 from ldc.core import DOMAIN_PRETRAIN, DOMAIN_PAIRS
 from ldc.core import LOCATION_ANY, LOCATION_INSTRUCTION, LOCATION_INPUT, LOCATION_OUTPUT, LOCATION_CONTENT, \
     LOCATIONS, LOCATIONS_PAIRS, LOCATIONS_PRETRAIN, locations_match
-from ldc.api.filter import Filter, FILTER_ACTIONS, FILTER_ACTION_KEEP, FILTER_ACTION_DISCARD
+from ldc.api import Filter, FILTER_ACTIONS, FILTER_ACTION_KEEP, FILTER_ACTION_DISCARD
 from ldc.api.pretrain import PretrainData
 from ldc.api.supervised.pairs import PairData
 
