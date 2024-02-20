@@ -1,8 +1,8 @@
 # is-maori
 
 * domain(s): pretrain, pairs
-* accepts: ldc.pretrain.PretrainData, ldc.supervised.pairs.PairData
-* generates: ldc.pretrain.PretrainData, ldc.supervised.pairs.PairData
+* accepts: ldc.api.pretrain.PretrainData, ldc.api.supervised.pairs.PairData
+* generates: ldc.api.pretrain.PretrainData, ldc.api.supervised.pairs.PairData
 
 Determines whether text is Māori or not (weak or strict mode), using the supplied threshold. The filter action then determines what to do with the record.
 

@@ -1,8 +1,8 @@
 # detect-maori
 
 * domain(s): pretrain, pairs
-* accepts: ldc.pretrain.PretrainData, ldc.supervised.pairs.PairData
-* generates: ldc.pretrain.PretrainData, ldc.supervised.pairs.PairData
+* accepts: ldc.api.pretrain.PretrainData, ldc.api.supervised.pairs.PairData
+* generates: ldc.api.pretrain.PretrainData, ldc.api.supervised.pairs.PairData
 
 Detects whether text is Māori or not, by calculating scores based on encountered characters after lower-casing the text and removing all white spaces/punctuation.
 
