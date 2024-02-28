@@ -1,15 +1,15 @@
 # is-maori
 
-* domain(s): pretrain, pairs
-* accepts: ldc.api.pretrain.PretrainData, ldc.api.supervised.pairs.PairData
-* generates: ldc.api.pretrain.PretrainData, ldc.api.supervised.pairs.PairData
+* domain(s): pretrain, pairs, classification
+* accepts: ldc.api.pretrain.PretrainData, ldc.api.supervised.pairs.PairData, ldc.api.supervised.classification.ClassificationData
+* generates: ldc.api.pretrain.PretrainData, ldc.api.supervised.pairs.PairData, ldc.api.supervised.classification.ClassificationData
 
 Determines whether text is Māori or not (weak or strict mode), using the supplied threshold. The filter action then determines what to do with the record.
 
 ```
 usage: is-maori [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}] [-N LOGGER_NAME]
                 [-m MIN_MAORI] [-s]
-                [-L [{any,instruction,input,output,content} [{any,instruction,input,output,content} ...]]]
+                [-L [{any,instruction,input,output,content,text} [{any,instruction,input,output,content,text} ...]]]
                 [-a {keep,discard}]
 
 Determines whether text is Māori or not (weak or strict mode), using the
@@ -28,10 +28,10 @@ optional arguments:
                         text. (default: 0.0)
   -s, --strict          Whether to use strict mode rather than weak one.
                         (default: False)
-  -L [{any,instruction,input,output,content} [{any,instruction,input,output,content} ...]], --location [{any,instruction,input,output,content} [{any,instruction,input,output,content} ...]]
-                        Which data use for counting tokens; pairs:
-                        any,instruction,input,output, pretrain: any,content
-                        (default: any)
+  -L [{any,instruction,input,output,content,text} [{any,instruction,input,output,content,text} ...]], --location [{any,instruction,input,output,content,text} [{any,instruction,input,output,content,text} ...]]
+                        Which data to check; classification: any|text, pairs:
+                        any|instruction|input|output, pretrain: any|content,
+                        translation: any|content (default: any)
   -a {keep,discard}, --action {keep,discard}
                         How to react when the thresholds are met (default:
                         keep)
