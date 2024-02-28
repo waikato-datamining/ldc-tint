@@ -3,11 +3,12 @@ import re
 from typing import List, Union
 
 from wai.logging import LOGGING_WARNING
-from ldc.core import DOMAIN_PRETRAIN, DOMAIN_PAIRS
+from ldc.core import DOMAIN_PRETRAIN, DOMAIN_PAIRS, DOMAIN_CLASSIFICATION
 from ldc.core import LOCATION_ANY, LOCATION_INSTRUCTION, LOCATION_INPUT, LOCATION_OUTPUT, LOCATION_CONTENT, \
-    LOCATIONS, LOCATIONS_PAIRS, LOCATIONS_PRETRAIN, locations_match
+    LOCATION_TEXT, LOCATIONS, locations_match, add_location_argument
 from ldc.api import Filter, FILTER_ACTIONS, FILTER_ACTION_KEEP, FILTER_ACTION_DISCARD
 from ldc.api.pretrain import PretrainData
+from ldc.api.supervised.classification import ClassificationData
 from ldc.api.supervised.pairs import PairData
 from reo_toolkit import is_maori
 
@@ -41,6 +42,9 @@ class IsMaori(Filter):
         if action not in FILTER_ACTIONS:
             raise Exception("Invalid action: %s" % action)
 
+        if location not in LOCATIONS:
+            raise Exception("Invalid location: %s" % location)
+
         self.min_maori = min_maori
         self.strict = strict
         self.location = location
@@ -71,7 +75,7 @@ class IsMaori(Filter):
         :return: the domains
         :rtype: list
         """
-        return [DOMAIN_PRETRAIN, DOMAIN_PAIRS]
+        return [DOMAIN_PRETRAIN, DOMAIN_PAIRS, DOMAIN_CLASSIFICATION]
 
     def accepts(self) -> List:
         """
@@ -80,7 +84,7 @@ class IsMaori(Filter):
         :return: the list of classes
         :rtype: list
         """
-        return [PretrainData, PairData]
+        return [PretrainData, PairData, ClassificationData]
 
     def generates(self) -> List:
         """
@@ -89,7 +93,7 @@ class IsMaori(Filter):
         :return: the list of classes
         :rtype: list
         """
-        return [PretrainData, PairData]
+        return [PretrainData, PairData, ClassificationData]
 
     def _create_argparser(self) -> argparse.ArgumentParser:
         """
@@ -101,7 +105,7 @@ class IsMaori(Filter):
         parser = super()._create_argparser()
         parser.add_argument("-m", "--min_maori", type=float, default=0.0, help="The minimum required ratio (0-1) of Māori words in the text.")
         parser.add_argument("-s", "--strict", action="store_true", help="Whether to use strict mode rather than weak one.")
-        parser.add_argument("-L", "--location", choices=LOCATIONS, nargs="*", default=LOCATION_ANY, help="Which data use for counting tokens; pairs: " + ",".join(LOCATIONS_PAIRS) + ", pretrain: " + ",".join(LOCATIONS_PRETRAIN))
+        add_location_argument(parser, "Which data to check")
         parser.add_argument("-a", "--action", choices=FILTER_ACTIONS, default=FILTER_ACTION_KEEP, help="How to react when the thresholds are met")
         return parser
 
@@ -170,6 +174,9 @@ class IsMaori(Filter):
         if isinstance(data, PretrainData):
             if locations_match(self.location, LOCATION_CONTENT):
                 ratios[LOCATION_CONTENT] = self._evaluate(data.content)
+        elif isinstance(data, ClassificationData):
+            if locations_match(self.location, LOCATION_TEXT):
+                ratios[LOCATION_TEXT] = self._evaluate(data.text)
         elif isinstance(data, PairData):
             if locations_match(self.location, LOCATION_INSTRUCTION):
                 ratios[LOCATION_INSTRUCTION] = self._evaluate(data.instruction)

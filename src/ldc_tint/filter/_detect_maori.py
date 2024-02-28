@@ -3,11 +3,12 @@ import string
 from typing import List, Union, Tuple
 
 from wai.logging import LOGGING_WARNING
-from ldc.core import DOMAIN_PRETRAIN, DOMAIN_PAIRS
+from ldc.core import DOMAIN_PRETRAIN, DOMAIN_PAIRS, DOMAIN_CLASSIFICATION
 from ldc.core import LOCATION_ANY, LOCATION_INSTRUCTION, LOCATION_INPUT, LOCATION_OUTPUT, LOCATION_CONTENT, \
-    LOCATIONS, LOCATIONS_PAIRS, LOCATIONS_PRETRAIN, locations_match
+    LOCATION_TEXT, LOCATIONS, locations_match, add_location_argument
 from ldc.api import Filter, FILTER_ACTIONS, FILTER_ACTION_KEEP, FILTER_ACTION_DISCARD
 from ldc.api.pretrain import PretrainData
+from ldc.api.supervised.classification import ClassificationData
 from ldc.api.supervised.pairs import PairData
 
 
@@ -77,6 +78,9 @@ class DetectMaori(Filter):
         if action not in FILTER_ACTIONS:
             raise Exception("Invalid action: %s" % action)
 
+        if location not in LOCATIONS:
+            raise Exception("Invalid location: %s" % location)
+
         self.max_non_maori = max_non_maori
         self.min_maori = min_maori
         self.location = location
@@ -107,7 +111,7 @@ class DetectMaori(Filter):
         :return: the domains
         :rtype: list
         """
-        return [DOMAIN_PRETRAIN, DOMAIN_PAIRS]
+        return [DOMAIN_PRETRAIN, DOMAIN_PAIRS, DOMAIN_CLASSIFICATION]
 
     def accepts(self) -> List:
         """
@@ -116,7 +120,7 @@ class DetectMaori(Filter):
         :return: the list of classes
         :rtype: list
         """
-        return [PretrainData, PairData]
+        return [PretrainData, PairData, ClassificationData]
 
     def generates(self) -> List:
         """
@@ -125,7 +129,7 @@ class DetectMaori(Filter):
         :return: the list of classes
         :rtype: list
         """
-        return [PretrainData, PairData]
+        return [PretrainData, PairData, ClassificationData]
 
     def _create_argparser(self) -> argparse.ArgumentParser:
         """
@@ -137,7 +141,7 @@ class DetectMaori(Filter):
         parser = super()._create_argparser()
         parser.add_argument("-M", "--max_non_maori", type=float, default=1.0, help="The maximum allowed ratio (0-1) of non-Māori characters in the text.")
         parser.add_argument("-m", "--min_maori", type=float, default=0.0, help="The minimum required ratio (0-1) of Māori characters (ie long vowels) in the text.")
-        parser.add_argument("-L", "--location", choices=LOCATIONS, nargs="*", default=LOCATION_ANY, help="Which data use for counting tokens; pairs: " + ",".join(LOCATIONS_PAIRS) + ", pretrain: " + ",".join(LOCATIONS_PRETRAIN))
+        add_location_argument(parser, "Which data to check")
         parser.add_argument("-a", "--action", choices=FILTER_ACTIONS, default=FILTER_ACTION_KEEP, help="How to react when the thresholds are met")
         return parser
 
@@ -239,6 +243,9 @@ class DetectMaori(Filter):
                 ratios[LOCATION_INPUT] = self._evaluate(data.input)
             if locations_match(self.location, LOCATION_OUTPUT):
                 ratios[LOCATION_OUTPUT] = self._evaluate(data.output)
+        elif isinstance(data, ClassificationData):
+            if locations_match(self.location, LOCATION_TEXT):
+                ratios[LOCATION_TEXT] = self._evaluate(data.text)
         else:
             raise Exception("Unhandled type of data: %s" % str(type(data)))
 

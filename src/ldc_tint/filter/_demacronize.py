@@ -3,11 +3,12 @@ import copy
 from typing import List, Union
 
 from wai.logging import LOGGING_WARNING
-from ldc.core import DOMAIN_PAIRS, DOMAIN_PRETRAIN, DOMAIN_TRANSLATION
+from ldc.core import DOMAIN_PAIRS, DOMAIN_PRETRAIN, DOMAIN_TRANSLATION, DOMAIN_CLASSIFICATION
 from ldc.core import LOCATION_ANY, LOCATION_INSTRUCTION, LOCATION_INPUT, LOCATION_OUTPUT, LOCATION_CONTENT, \
-    LOCATIONS, LOCATIONS_PAIRS, LOCATIONS_PRETRAIN, LOCATIONS_TRANSLATION, locations_match
+    LOCATION_TEXT, LOCATIONS, locations_match, add_location_argument
 from ldc.api import Filter
 from ldc.api.pretrain import PretrainData
+from ldc.api.supervised.classification import ClassificationData
 from ldc.api.supervised.pairs import PairData
 from ldc.api.translation import TranslationData
 
@@ -80,7 +81,7 @@ class Demacronize(Filter):
         :return: the domains
         :rtype: list
         """
-        return [DOMAIN_PAIRS, DOMAIN_PRETRAIN, DOMAIN_TRANSLATION]
+        return [DOMAIN_PAIRS, DOMAIN_PRETRAIN, DOMAIN_TRANSLATION, DOMAIN_CLASSIFICATION]
 
     def accepts(self) -> List:
         """
@@ -89,7 +90,7 @@ class Demacronize(Filter):
         :return: the list of classes
         :rtype: list
         """
-        return [PairData, PretrainData, TranslationData]
+        return [PairData, PretrainData, TranslationData, ClassificationData]
 
     def generates(self) -> List:
         """
@@ -98,7 +99,7 @@ class Demacronize(Filter):
         :return: the list of classes
         :rtype: list
         """
-        return [PairData, PretrainData, TranslationData]
+        return [PairData, PretrainData, TranslationData, ClassificationData]
 
     def _create_argparser(self) -> argparse.ArgumentParser:
         """
@@ -109,7 +110,7 @@ class Demacronize(Filter):
         """
         parser = super()._create_argparser()
         parser.add_argument("-d", "--demacronization", choices=DEMCRONIZATION, default=DEMACRONIZE_DOUBLE, help="How to process the macrons")
-        parser.add_argument("-L", "--location", choices=LOCATIONS, nargs="*", default=LOCATION_ANY, help="Where to look for the macrons; pairs: " + ",".join(LOCATIONS_PAIRS) + ", pretrain: " + ",".join(LOCATIONS_PRETRAIN) + ", translation: " + ",".join(LOCATIONS_TRANSLATION))
+        add_location_argument(parser, "Where to look for the macrons")
         parser.add_argument("-g", "--language", type=str, help="The languages to inspect; inspects all if not specified", required=False, nargs="*")
         return parser
 
@@ -233,6 +234,9 @@ class Demacronize(Filter):
                 result.input = self._process_macrons(result.input)
             if locations_match(self.location, LOCATION_OUTPUT):
                 result.output = self._process_macrons(result.output)
+        elif isinstance(result, ClassificationData):
+            if locations_match(self.location, LOCATION_TEXT):
+                result.text = self._process_macrons(result.text)
         elif isinstance(result, PretrainData):
             if locations_match(self.location, LOCATION_CONTENT):
                 result.content = self._process_macrons(result.content)
