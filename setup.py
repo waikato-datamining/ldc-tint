@@ -33,7 +33,7 @@ setup(
     install_requires=[
         "llm-dataset-converter>=0.2.1",
     ],
-    version="0.0.1",
+    version="0.0.2",
     author='Peter Reutemann',
     author_email='fracpete@waikato.ac.nz',
     entry_points={

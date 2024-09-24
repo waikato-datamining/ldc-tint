@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.0.2 (????-??-??)
+0.0.2 (2024-09-25)
 ------------------
 
 - removed reo-toolkit dependency, as the library is no longer publicly available
