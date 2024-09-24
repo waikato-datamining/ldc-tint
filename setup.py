@@ -32,7 +32,6 @@ setup(
     packages=find_namespace_packages(where='src'),
     install_requires=[
         "llm-dataset-converter>=0.2.1",
-        "reo-toolkit @ git+https://github.com/TeHikuMedia/reo-toolkit"
     ],
     version="0.0.1",
     author='Peter Reutemann',
