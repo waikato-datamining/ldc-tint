@@ -13,7 +13,7 @@ def _read(f):
 
 
 setup(
-    name="ldc-tint",
+    name="ldc_tint",
     description="Python3 library containing plugins for llm-dataset-converter specific to Tikanga in Technology project (TinT).",
     long_description=(
             _read('DESCRIPTION.rst') + b'\n' +
